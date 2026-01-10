@@ -38,9 +38,80 @@ For testing locally:
 2. Edit `config.local.sh` with your LINE credentials
 
 3. Run the scraper:
+
    ```bash
    go run cmd/scraper/main.go
    ```
+
+## Running as Background Service (macOS)
+
+The scraper can run continuously in the background on macOS using launchd. This allows it to run even when the screen is off or after system restarts.
+
+### Check Service Status
+
+```bash
+launchctl list | grep policeScraper
+```
+
+**Output explanation:**
+
+- If running: Shows `PID 0 com.user.policeScraper` (PID is process ID, 0 means success)
+- If stopped: Shows `- 0 com.user.policeScraper`
+- If error: Shows `- ERROR_CODE com.user.policeScraper`
+
+### Stop the Service (when you found your slot)
+
+**Temporary stop** (will restart on next login/reboot):
+
+```bash
+launchctl stop com.user.policeScraper
+```
+
+**Permanent stop** (won't auto-start):
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.user.policeScraper.plist
+```
+
+### Start the Service
+
+**If stopped but still loaded:**
+
+```bash
+launchctl start com.user.policeScraper
+```
+
+**If unloaded:**
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.user.policeScraper.plist
+```
+
+### View Logs
+
+**Today's scraper logs:**
+
+```bash
+tail -f ~/Documents/Projects/policeScrapper/logs/$(date +%Y-%m-%d).log
+```
+
+**Service logs:**
+
+```bash
+tail -f ~/Documents/Projects/policeScrapper/logs/launchd.out.log
+tail -f ~/Documents/Projects/policeScrapper/logs/launchd.err.log
+```
+
+### Rebuild Binary (after code changes)
+
+If you modify the code, rebuild and restart the service:
+
+```bash
+cd ~/Documents/Projects/policeScrapper
+go build -o scraper cmd/scraper/main.go
+launchctl unload ~/Library/LaunchAgents/com.user.policeScraper.plist
+launchctl load ~/Library/LaunchAgents/com.user.policeScraper.plist
+```
 
 ## Configuration
 
@@ -53,6 +124,9 @@ Additional flags:
 
 - `--no-notify`: Run without sending LINE notifications
 - `notify-test`: Test LINE notification setup
+
+**Check frequency:** Every 15 minutes
+**Behavior when slots found:** Sends LINE notification but continues running (doesn't auto-stop)
 
 ## Logs
 

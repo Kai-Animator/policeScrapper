@@ -19,6 +19,9 @@ logs/
 # Output of the go coverage tool
 *.out
 
+# Compiled binary
+scraper
+
 # Local configuration
 config.local.sh
 *.local.*
